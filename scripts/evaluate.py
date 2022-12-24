@@ -19,42 +19,45 @@ IMAGE_WIDTH = 600
 
 MODEL_PATH = "YOUR-MODEL-PATH-WHICH-NEEDS-TO-BE-EVALUATED"
 
-EVAL = False 
+EVAL = False
 PLOT_LOSS = False
 
-def save_predictions(data, model):    
+
+def save_predictions(data, model):
     model.eval()
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(data)):
 
-            X, y, s = batch # here 's' is the name of the file stored in the root directory
+            X, y, s = batch  # here 's' is the name of the file stored in the root directory
             X, y = X.to(device), y.to(device)
-            predictions = model(X) 
-            
+            predictions = model(X)
+
             predictions = torch.nn.functional.softmax(predictions, dim=1)
-            pred_labels = torch.argmax(predictions, dim=1) 
+            pred_labels = torch.argmax(predictions, dim=1)
             pred_labels = pred_labels.float()
 
             # Remapping the labels
             pred_labels = pred_labels.to('cpu')
             pred_labels.apply_(lambda x: t2l[x].id)
-            pred_labels = pred_labels.to(device)   
+            pred_labels = pred_labels.to(device)
 
             # Resizing predicted images too original size
-            pred_labels = transforms.Resize((1024, 2048))(pred_labels)             
+            pred_labels = transforms.Resize((1024, 2048))(pred_labels)
 
             # Configure filename & location to save predictions as images
             s = str(s)
             pos = s.rfind('/', 0, len(s))
-            name = s[pos+1:-18]  
+            name = s[pos+1:-18]
             global location
             location = 'saved_images\multiclass_1'
 
-            utils.save_as_images(pred_labels, location, name, multiclass=True)                
+            utils.save_as_images(pred_labels, location, name, multiclass=True)
+
 
 def evaluate(path):
     T = transforms.Compose([
-        transforms.Resize((IMAGE_HEIGHT, IMAGE_WIDTH), interpolation=Image.NEAREST)
+        transforms.Resize((IMAGE_HEIGHT, IMAGE_WIDTH),
+                          interpolation=Image.NEAREST)
     ])
 
     val_set = get_cityscapes_data(
@@ -66,7 +69,7 @@ def evaluate(path):
         shuffle=True,
         eval=True
     )
- 
+
     print('Data has been loaded!')
 
     net = UNET(in_channels=3, classes=19).to(device)
@@ -75,6 +78,7 @@ def evaluate(path):
     net.eval()
     print(f'{path} has been loaded and initialized')
     save_predictions(val_set, net)
+
 
 def plot_losses(path):
     checkpoint = torch.load(path)
@@ -87,6 +91,7 @@ def plot_losses(path):
     plt.ylabel('Loss')
     plt.title(f"Loss over {epoch+1} epoch/s")
     plt.show()
+
 
 if __name__ == '__main__':
     if EVAL:
