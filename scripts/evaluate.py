@@ -1,6 +1,7 @@
 import torch
 from model import UNET
-from utils import *
+from utilities import *
+from utilities import save_as_images
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from torchvision import transforms
@@ -13,13 +14,13 @@ else:
     device = 'cpu'
     print('Running on the CPU')
 
-ROOT_DIR_CITYSCAPES = 'datasets/cityscapes'
+ROOT_DIR_CITYSCAPES = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/datasets'
 IMAGE_HEIGHT = 300
 IMAGE_WIDTH = 600
 
-MODEL_PATH = "YOUR-MODEL-PATH-WHICH-NEEDS-TO-BE-EVALUATED"
+MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model.pt'
 
-EVAL = False
+EVAL = True
 PLOT_LOSS = False
 
 
@@ -49,9 +50,9 @@ def save_predictions(data, model):
             pos = s.rfind('/', 0, len(s))
             name = s[pos+1:-18]
             global location
-            location = 'saved_images\multiclass_1'
+            location = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/datasets/output'
 
-            utils.save_as_images(pred_labels, location, name, multiclass=True)
+            save_as_images(pred_labels, location, name)
 
 
 def evaluate(path):
