@@ -5,7 +5,7 @@ import torchvision.transforms.functional as TF
 
 class UNET(nn.Module):
 
-    def __init__(self, in_channels=3, classes=1):
+    def __init__(self, in_channels=3, classes=19):
         super(UNET, self).__init__()
         # self.layers = [in_channels, 64, 128, 256, 512, 1024]
         self.layers = [in_channels, 16, 32, 64, 128, 256]

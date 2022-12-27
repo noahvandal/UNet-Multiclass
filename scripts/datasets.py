@@ -59,6 +59,10 @@ class CityscapesDataset(Dataset):
         # print(imgpath, ypath)
         image = Image.open(imgpath)
         y = Image.open(ypath)
+        # print(imgpath)
+        # print(ypath)
+        # print(image.size)
+        # print(y.size)
 
         if self.transform is not None:
             image = self.transform(image)

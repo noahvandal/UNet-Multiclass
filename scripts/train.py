@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from tqdm import tqdm
-from utils import *
+from utilities import *
 from model import UNET
 
 if torch.cuda.is_available():
@@ -16,7 +16,7 @@ else:
 
 MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model.pt'
 LOAD_MODEL = False
-ROOT_DIR = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/datasets'
+ROOT_DIR = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/datasets'
 IMG_HEIGHT = 110
 IMG_WIDTH = 220
 BATCH_SIZE = 16
@@ -33,8 +33,9 @@ def train_function(data, model, optimizer, loss_fn, device):
         X, y = X.to(device), y.to(device)
         preds = model(X)
         y = torch.movedim(y, 3, 1)
-        y = y[:, -1, :, :]
-        # print(preds.shape, y.shape)
+
+        # y = y[:, -1, :, :]
+        print(preds.shape, y.shape)
         loss = loss_fn(preds, y)
         optimizer.zero_grad()
         loss.backward()
