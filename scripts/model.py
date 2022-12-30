@@ -7,8 +7,8 @@ class UNET(nn.Module):
 
     def __init__(self, in_channels=3, classes=19):
         super(UNET, self).__init__()
-        # self.layers = [in_channels, 64, 128, 256, 512, 1024]
-        self.layers = [in_channels, 16, 32, 64, 128, 256]
+        self.layers = [in_channels, 64, 128, 256, 512, 1024]
+        # self.layers = [in_channels, 16, 32, 64, 128, 256]
 
         self.double_conv_downs = nn.ModuleList(
             [self.__double_conv(layer, layer_n) for layer, layer_n in zip(self.layers[:-1], self.layers[1:])])
@@ -22,7 +22,7 @@ class UNET(nn.Module):
 
         self.max_pool_2x2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.final_conv = nn.Conv2d(16, 4, kernel_size=1)
+        self.final_conv = nn.Conv2d(64, out_channels=classes, kernel_size=1)
 
     def __double_conv(self, in_channels, out_channels):
         conv = nn.Sequential(

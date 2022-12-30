@@ -14,14 +14,14 @@ else:
     DEVICE = "cpu"
     print('Running on the CPU')
 
-MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model.pt'
-LOAD_MODEL = False
+MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_1230.pt'
+LOAD_MODEL = True
 ROOT_DIR = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET'
 IMG_HEIGHT = 110
 IMG_WIDTH = 220
 BATCH_SIZE = 16
 LEARNING_RATE = 0.0005
-EPOCHS = 5
+EPOCHS = 50
 
 
 def train_function(data, model, optimizer, loss_fn, device):
@@ -32,11 +32,15 @@ def train_function(data, model, optimizer, loss_fn, device):
         X, y = batch
         X, y = X.to(device), y.to(device)
         preds = model(X)
-        y = torch.movedim(y, 3, 1)
-        y = y.FloatTensor()
+        # y = torch.movedim(y, 3, 1)
+        # y = y.FloatTensor()
 
         # y = y[:, -1, :, :]
         # print(preds.shape, y.shape)
+        # print(type(preds), type(y))
+        # print(preds.dtype, y.dtype)
+        # y = y.to(torch.float32)
+        # print(preds.dtype, y.dtype)
         loss = loss_fn(preds, y)
         optimizer.zero_grad()
         loss.backward()
@@ -87,6 +91,7 @@ def main():
         loss_val = train_function(
             train_set, unet, optimizer, loss_function, DEVICE)
         LOSS_VALS.append(loss_val)
+        print(loss_val)
         torch.save({
             'model_state_dict': unet.state_dict(),
             'optim_state_dict': optimizer.state_dict(),

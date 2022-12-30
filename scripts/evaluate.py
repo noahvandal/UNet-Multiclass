@@ -4,8 +4,11 @@ from utilities import *
 from utilities import save_as_images
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from PIL import Image
 from torchvision import transforms
+import tensorflow as tf
 from cityscapesscripts.helpers.labels import trainId2label as t2l
+from labels import name2label, id2label
 
 if torch.cuda.is_available():
     device = 'cuda:0'
@@ -14,11 +17,11 @@ else:
     device = 'cpu'
     print('Running on the CPU')
 
-ROOT_DIR_CITYSCAPES = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/datasets'
+ROOT_DIR_CITYSCAPES = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET'
 IMAGE_HEIGHT = 300
 IMAGE_WIDTH = 600
 
-MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model.pt'
+MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_1230.pt'
 
 EVAL = True
 PLOT_LOSS = False
@@ -32,10 +35,12 @@ def save_predictions(data, model):
             X, y, s = batch  # here 's' is the name of the file stored in the root directory
             X, y = X.to(device), y.to(device)
             predictions = model(X)
-
+            # print(X.shape, y.shape, predictions.shape)
+            imgs = predictions
             predictions = torch.nn.functional.softmax(predictions, dim=1)
             pred_labels = torch.argmax(predictions, dim=1)
             pred_labels = pred_labels.float()
+            # print(pred_labels.shape)
 
             # Remapping the labels
             pred_labels = pred_labels.to('cpu')
@@ -45,14 +50,49 @@ def save_predictions(data, model):
             # Resizing predicted images too original size
             pred_labels = transforms.Resize((1024, 2048))(pred_labels)
 
-            # Configure filename & location to save predictions as images
+            # imgs = plt.imshow(tf.argmax(imgs[0], axis=-1))
+            # print(imgs.shape)
+            imgs = onehot_to_rgb(imgs, id2label)
+            print('image shape', imgs.shape)
+            print(type(imgs))
+            # Configure f  ilename & location to save predictions as images
             s = str(s)
             pos = s.rfind('/', 0, len(s))
             name = s[pos+1:-18]
-            global location
-            location = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/datasets/output'
+            imgname = '/' + name + 'rgb.png'
 
-            save_as_images(pred_labels, location, name)
+            global location
+            location = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET/output_1230'
+
+            # save_as_images(pred_labels, location, name)
+
+            # save_as_images(imgs, location, imgname)
+            img = Image.fromarray(imgs)
+            img.save(location + imgname)
+
+
+def onehot_to_rgb(onehot, color_dict):
+    single_layer = np.argmax(onehot, axis=1)
+    single_layer = single_layer[0, :, :]
+    print(onehot.shape, single_layer.shape)
+    output = np.zeros(onehot.shape[2:4]+(3,))
+    # print(color_dict.keys())
+    print(output.shape)
+    for k in color_dict.keys():
+        # print(k)
+        # print(color_dict[k])
+        color = color_dict[k][7]
+        # print(color)
+        output[single_layer == k] = color
+        print(np.sum(np.array(single_layer) == k))
+        print(k, color)
+        # for i_, i in enumerate(single_layer):
+        # for j_, j in enumerate(i):
+        # if single_layer[i_, j_] == k:
+        # print(single_layer[i_, j_], color)
+        # output[i_, j_] = color
+
+    return np.uint8(output)
 
 
 def evaluate(path):
