@@ -71,11 +71,13 @@ class CityscapesDataset(Dataset):
 
         image = transforms.ToTensor()(image)
         y = np.array(y)
+        print('orig y shape', y.shape)
+
         y = y[:, :, 3]  # removing the alpha channel (not really needed)
         y = torch.from_numpy(y)
-
+        print('yshape before', y.shape)
         y = y.type(torch.LongTensor)
-        # print("yshape", y.shape)
+        print("yshape", y.shape)
 
         # print('val at idx 100,100:', y[100][100])
 

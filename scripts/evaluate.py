@@ -21,13 +21,13 @@ ROOT_DIR_CITYSCAPES = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/Github
 IMAGE_HEIGHT = 300
 IMAGE_WIDTH = 600
 
-MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_1230.pt'
+MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102.pt'
 
 EVAL = True
 PLOT_LOSS = False
 
 
-def save_predictions(data, model):
+def save_predictions(data, model, globalSum):
     model.eval()
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(data)):
@@ -52,17 +52,17 @@ def save_predictions(data, model):
 
             # imgs = plt.imshow(tf.argmax(imgs[0], axis=-1))
             # print(imgs.shape)
-            imgs = onehot_to_rgb(imgs, id2label)
+            imgs, globalSum = onehot_to_rgb(imgs, id2label, globalSum)
             print('image shape', imgs.shape)
             print(type(imgs))
             # Configure f  ilename & location to save predictions as images
             s = str(s)
             pos = s.rfind('/', 0, len(s))
             name = s[pos+1:-18]
-            imgname = '/' + name + 'rgb.png'
+            imgname = '/' + name + '1223rgb.png'
 
             global location
-            location = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET/output_1230'
+            location = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET/output_0103'
 
             # save_as_images(pred_labels, location, name)
 
@@ -70,8 +70,10 @@ def save_predictions(data, model):
             img = Image.fromarray(imgs)
             img.save(location + imgname)
 
+            print(globalSum)
 
-def onehot_to_rgb(onehot, color_dict):
+
+def onehot_to_rgb(onehot, color_dict, globalSum):
     single_layer = np.argmax(onehot, axis=1)
     single_layer = single_layer[0, :, :]
     print(onehot.shape, single_layer.shape)
@@ -84,18 +86,21 @@ def onehot_to_rgb(onehot, color_dict):
         color = color_dict[k][7]
         # print(color)
         output[single_layer == k] = color
-        print(np.sum(np.array(single_layer) == k))
-        print(k, color)
+        pixelSum = np.sum(np.array(single_layer) == k)
+        # print(pixelSum)
+        globalSum[k] += pixelSum
+        # print(k, color)
         # for i_, i in enumerate(single_layer):
         # for j_, j in enumerate(i):
         # if single_layer[i_, j_] == k:
         # print(single_layer[i_, j_], color)
         # output[i_, j_] = color
 
-    return np.uint8(output)
+    return np.uint8(output), globalSum
 
 
 def evaluate(path):
+    globalSum = np.zeros(34)
     T = transforms.Compose([
         transforms.Resize((IMAGE_HEIGHT, IMAGE_WIDTH),
                           interpolation=Image.NEAREST)
@@ -118,7 +123,8 @@ def evaluate(path):
     net.load_state_dict(checkpoint['model_state_dict'])
     net.eval()
     print(f'{path} has been loaded and initialized')
-    save_predictions(val_set, net)
+    save_predictions(val_set, net, globalSum)
+    # print(globalSum)
 
 
 def plot_losses(path):
