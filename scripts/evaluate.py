@@ -1,6 +1,6 @@
 import torch
 from model import UNET
-from utilities import *
+# from utilities import *
 # from utilities import save_as_images
 from tqdm import tqdm
 import matplotlib.pyplot as plt

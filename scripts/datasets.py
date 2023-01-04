@@ -3,13 +3,15 @@ import os
 from PIL import Image
 import torch
 from torch.utils.data import Dataset
-from torchvision import transforms, datasets
+from torchvision import transforms
 import numpy as np
 import os
-import matplotlib
-import matplotlib.pyplot as plt
-from evaluate import rgbToOnehotNew
-from labels import id2label, color2label
+# import PIL
+# import cv2
+# import matplotlib
+# import matplotlib.pyplot as plt
+# from evaluate import rgbToOnehotNew
+from labels import color2label
 
 
 class CityscapesDataset(Dataset):
@@ -64,18 +66,38 @@ class CityscapesDataset(Dataset):
         ypath = self.label_path+self.yLabel_list[index]
         # print(imgpath, ypath)
         # try:
+        imgpath = str(imgpath)
+        ypath = str(ypath)
+
         print(imgpath)
         print(ypath)
-        image = Image.open(imgpath)
+        # image = Image.open(open(imgpath, 'rb'))
+        print(type(imgpath))
+
+        # testpath = 'C:/Users/noahv/OneDrive/NDSU Research/test_segformer.png'
+        img = Image.open(imgpath, mode='r')
+        # image = Image.Image.load(imgpath)
+
+        # image = cv2.imread(imgpath)
+        # print(image.shape)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = Image.fromarray(image)
+
         print('Image loaded')
-        y = Image.open(ypath)
+        # y = Image.open(open(ypath, 'rb'))
+        y = Image.open(ypath, mode='r')
+        # y = Image.Image.load(ypath)
+
+        # y = cv2.imread(ypath)
+        # y = cv2.cvtColor(y, cv2.COLOR_BGR2RGB)
+        y = Image.fromarray(y)
         print('Mask loaded')
 
         if self.transform is not None:
-            image = self.transform(image)
+            img = self.transform(img)
             y = self.transform(y)
 
-        image = transforms.ToTensor()(image)
+        img = transforms.ToTensor()(img)
 
         y = np.array(y)
         y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
@@ -85,9 +107,9 @@ class CityscapesDataset(Dataset):
         y = y.type(torch.LongTensor)
 
         if self.eval:
-            return image, y, self.XImg_list[index]
+            return img, y, self.XImg_list[index]
         else:
-            return image, y
+            return img, y
 
         # except:
             # pass
@@ -121,6 +143,23 @@ class CityscapesDataset(Dataset):
         #     return image, y, self.XImg_list[index]
         # else:
         #     return image, y
+
+
+def rgbToOnehotNew(rgb, colorDict):
+    shape = rgb.shape[:2]
+    arr = np.zeros(shape, dtype=np.int16)
+
+    W = np.power(256, [[0], [1], [2]])
+    img_id = rgb.dot(W).squeeze(-1)
+    values = np.unique(img_id)
+
+    for i, c in enumerate(values):
+        try:
+            arr[img_id == c] = colorDict[i][7]
+        except:
+            pass
+
+    return arr
 
 
 # a label and all meta information

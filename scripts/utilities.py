@@ -1,10 +1,11 @@
 import torch
-from torch.utils.data import DataLoader
-from torchvision import datasets, utils, transforms
+# from torch.utils.data import DataLoader
+# from torchvision import datasets, utils, transforms
+from torchvision import transforms
 from datasets import CityscapesDataset
-from PIL import Image
-from tqdm import tqdm
-import numpy as np
+# from PIL import Image
+# from tqdm import tqdm
+# import numpy as np
 
 
 def get_cityscapes_data(

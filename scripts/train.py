@@ -6,6 +6,7 @@ from torchvision import transforms
 from tqdm import tqdm
 from utilities import *
 from model import UNET
+from PIL import Image
 
 if torch.cuda.is_available():
     DEVICE = 'cuda:0'
