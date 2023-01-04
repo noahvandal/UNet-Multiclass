@@ -55,7 +55,7 @@ def train_function(data, model, optimizer, loss_fn, device):
         # y = y.FloatTensor()
 
         # y = y[:, -1, :, :]
-        print(preds.shape, y.shape)
+        # print(preds.shape, y.shape)
 
         # print(type(preds), type(y))
         # print(preds.dtype, y.dtype)
@@ -87,6 +87,7 @@ def main():
         root_dir=ROOT_DIR,
         transforms=transform,
         batch_size=BATCH_SIZE,
+        numClasses=19
     )
 
     print('Data Loaded Successfully!')

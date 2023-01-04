@@ -15,13 +15,14 @@ def get_cityscapes_data(
     target_type="semantic",
     transforms=None,
     batch_size=1,
+    numClasses=1,
     eval=False,
     shuffle=True,
     pin_memory=True,
 
 ):
     data = CityscapesDataset(
-        mode=mode, split=split, target_type=target_type, relabelled=relabelled, transform=transforms, root_dir=root_dir, eval=eval)
+        mode=mode, split=split, target_type=target_type, relabelled=relabelled, transform=transforms, root_dir=root_dir, eval=eval, numClasses=numClasses)
 
     data_loaded = torch.utils.data.DataLoader(
         data, batch_size=batch_size, shuffle=shuffle, pin_memory=pin_memory)

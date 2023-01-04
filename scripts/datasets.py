@@ -6,11 +6,16 @@ from torch.utils.data import Dataset
 from torchvision import transforms, datasets
 import numpy as np
 import os
+import matplotlib
+import matplotlib.pyplot as plt
+from evaluate import rgbToOnehot, rgbToOnehotNew
+from labels import id2label, color2label
 
 
 class CityscapesDataset(Dataset):
-    def __init__(self, split, relabelled, root_dir, target_type='semantic', mode='fine', transform=None, eval=False):
+    def __init__(self, split, relabelled, root_dir, target_type='semantic', mode='fine', transform=None, eval=False, numClasses=1):
         self.transform = transform
+        self.classes = numClasses
         if mode == 'fine':
             self.mode = 'gtFine'
         elif mode == 'coarse':
@@ -71,13 +76,56 @@ class CityscapesDataset(Dataset):
 
         image = transforms.ToTensor()(image)
         y = np.array(y)
-        print('orig y shape', y.shape)
+        # print('orig y shape', y.shape)
 
-        y = y[:, :, 3]  # removing the alpha channel (not really needed)
+        y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
+        # y = torch.from_numpy(y)
+        # print('yshape before', y.shape)
+        # y = y.type(torch.LongTensor)
+        # print("yshape", y.shape)
+
+        # y = rgbToOnehot(y, color2label, id2label, self.classes)
+        y = rgbToOnehotNew(y, color2label)
+        # print(y.shape)
+
         y = torch.from_numpy(y)
-        print('yshape before', y.shape)
         y = y.type(torch.LongTensor)
-        print("yshape", y.shape)
+        # print(y.shape)
+        # newy = np.zeros((y.shape[0], y.shape[1]))
+        # print(newy.shape)
+
+        # for _a, a in enumerate(y):
+        # for _b, b in enumerate(a):
+        # print(y[_a,][_b])
+
+        # nb_classes = 19 # 18 classes + background
+        # idx = np.linspace(0., 1., nb_classes)
+        # cmap = matplotlib.cm.get_cmap('viridis')
+        # rgb = cmap(idx, bytes=True)[:, :3]  # Remove alpha value
+
+        # h, w = 190, 100
+        # rgb = rgb.repeat(1000, 0)
+        # target = np.zeros((h*w, 3), dtype=np.uint8)
+        # target[:rgb.shape[0]] = rgb
+        # target = target.reshape(h, w, 3)
+
+        # # plt.imshow(target) # Each class in 10 rows
+
+        # # Create mapping
+        # # Get color codes for dataset (maybe you would have to use more than a single
+        # # image, if it doesn't contain all classes)
+        # target = torch.from_numpy(target)
+        # colors = torch.unique(target.view(-1, target.size(2)), dim=0).numpy()
+        # target = target.permute(2, 0, 1).contiguous()
+
+        # mapping = {tuple(c): t for c, t in zip(colors.tolist(), range(len(colors)))}
+
+        # mask = torch.empty(h, w, dtype=torch.long)
+        # for k in mapping:
+        #     # Get all indices for current class
+        #     idx = (target==torch.tensor(k, dtype=torch.uint8).unsqueeze(1).unsqueeze(2))
+        #     validx = (idx.sum(0) == 3)  # Check that all channels match
+        #     mask[validx] = torch.tensor(mapping[k], dtype=torch.long)
 
         # print('val at idx 100,100:', y[100][100])
 

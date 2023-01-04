@@ -1,7 +1,7 @@
 import torch
 from model import UNET
 from utilities import *
-from utilities import save_as_images
+# from utilities import save_as_images
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -9,6 +9,7 @@ from torchvision import transforms
 import tensorflow as tf
 from cityscapesscripts.helpers.labels import trainId2label as t2l
 from labels import name2label, id2label
+import numpy as np
 
 if torch.cuda.is_available():
     device = 'cuda:0'
@@ -76,27 +77,63 @@ def save_predictions(data, model, globalSum):
 def onehot_to_rgb(onehot, color_dict, globalSum):
     single_layer = np.argmax(onehot, axis=1)
     single_layer = single_layer[0, :, :]
-    print(onehot.shape, single_layer.shape)
     output = np.zeros(onehot.shape[2:4]+(3,))
-    # print(color_dict.keys())
-    print(output.shape)
     for k in color_dict.keys():
-        # print(k)
-        # print(color_dict[k])
         color = color_dict[k][7]
-        # print(color)
         output[single_layer == k] = color
         pixelSum = np.sum(np.array(single_layer) == k)
-        # print(pixelSum)
         globalSum[k] += pixelSum
-        # print(k, color)
-        # for i_, i in enumerate(single_layer):
-        # for j_, j in enumerate(i):
-        # if single_layer[i_, j_] == k:
-        # print(single_layer[i_, j_], color)
-        # output[i_, j_] = color
 
     return np.uint8(output), globalSum
+
+
+def rgb_to_onehot(rgb_arr, color_dict):
+    num_classes = len(color_dict)
+    shape = rgb_arr.shape[:2]+(num_classes,)
+    arr = np.zeros(shape, dtype=np.int8)
+    for i, cls in enumerate(color_dict):
+        arr[:, :, i] = np.all(rgb_arr.reshape((-1, 3)) ==
+                              color_dict[i], axis=1).reshape(shape[:2])
+
+    return arr
+
+
+# input rgb as numpy array; numClasses must be specified in case dictionary is not desired to be entirely trained on
+def rgbToOnehot(rgb, colorDict, idDict, numClasses):
+    shape = rgb.shape[:2]
+    arr = np.zeros(shape, dtype=np.int16)
+    # print(colorDict.keys())
+    # print(idDict.keys())
+    # sorting through each color in dictionary per class
+    for k, j in zip(colorDict.keys(), idDict.keys()):
+        if j <= (numClasses - 1):
+            color = np.array(colorDict[k][7])
+            for _x, x in enumerate(rgb):
+                for _y, y in enumerate(x):
+                    # print(color, rgb[_x][_y])
+                    pixel = np.array(rgb[_x][_y])
+                    if np.all(pixel == color):
+                        arr[_x][_y] = j  # assigning pixel to ID value
+    return arr
+
+# input rgb as numpy array; numClasses must be specified in case dictionary is not desired to be entirely trained on
+
+
+def rgbToOnehotNew(rgb, colorDict):
+    shape = rgb.shape[:2]
+    arr = np.zeros(shape, dtype=np.int16)
+
+    W = np.power(256, [[0], [1], [2]])
+    img_id = rgb.dot(W).squeeze(-1)
+    values = np.unique(img_id)
+
+    for i, c in enumerate(values):
+        try:
+            arr[img_id == c] = colorDict[i][7]
+        except:
+            pass
+
+    return arr
 
 
 def evaluate(path):
