@@ -1,21 +1,22 @@
 from collections import namedtuple
-import os
+# import os
 from PIL import Image
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 import numpy as np
 import os
+import time
 # import PIL
 # import cv2
 # import matplotlib
 # import matplotlib.pyplot as plt
-# from evaluate import rgbToOnehotNew
+from evaluate import rgbToOnehotNew
 from labels import color2label
 
 
 class CityscapesDataset(Dataset):
-    def __init__(self, split, relabelled, root_dir, target_type='semantic', mode='fine', transform=None, eval=False, numClasses=1):
+    def __init__(self, split, root_dir, target_type='semantic', mode='fine', transform=None, eval=False, numClasses=1):
         self.transform = transform
         self.classes = numClasses
         if mode == 'fine':
@@ -29,6 +30,42 @@ class CityscapesDataset(Dataset):
 
         # Preparing a list of all labelTrainIds rgb and
         # ground truth images. Setting relabbelled=True is recommended.
+
+        # self.label_path = os.path.join(
+        #     root_dir + '/' + self.mode + '/' + self.split + '/bremen/')
+        # self.rgb_path = os.path.join(
+        #     root_dir + '/leftImg8bit/' + self.split + '/bremen/')
+
+        # temp = os.listdir(self.label_path)
+        # list_items = temp.copy()
+        # for item in temp:
+        #     if not item.endswith('gtFine_color.png', 0, len(item)):
+        #         list_items.remove(item)
+
+        # self.yLabel_list.extend(list_items)
+        # tempXpath = os.listdir(self.rgb_path)
+        # self.XImg_list.extend(tempXpath)
+
+        # # print(len(self.yLabel_list), len(self.XImg_list))
+
+        # imgItems = os.listdir(self.rgb_path)
+        # maskItems = os.listdir(self.label_path)
+
+        # list_items = maskItems.copy()
+        # print(len(list_items))
+        # for item in maskItems:
+        #     if not item.endswith('gtFine_color.png', 0, len(item)):
+        #         list_items.remove(item)
+
+        # # print(imgItems)
+
+        # maskItems = [self.label_path + path for path in list_items]
+        # imgItems = [self.rgb_path + path for path in imgItems]
+
+        # self.yLabel_list.extend(maskItems)
+        # self.XImg_list.extend(imgItems)
+
+        # print(len(maskItems), len(imgItems))
 
         self.label_path = os.path.join(
             os.getcwd(), root_dir+'/'+self.mode+'/'+self.split)
@@ -53,51 +90,39 @@ class CityscapesDataset(Dataset):
                 ['/'+city+'/' +
                     path for path in os.listdir(self.rgb_path+'/'+city)]
             )
+        # time.sleep(1)
 
     def __len__(self):
         length = len(self.XImg_list)
         return length
 
     def __getitem__(self, index):
-        imgpath = self.rgb_path+self.XImg_list[index]
-        # print(imgpath)
-        # print(self.yLabel_list)
+        # print(len(self.XImg_list))
+        # print(len(self.yLabel_list))
+        # print(index)
+        # if (index >= (len(self.XImg_list)) or (index >= len(self.yLabel_list))):
+        # index = int(len(self.XImg_list) / 2)
+        # print(len(self.XImg_list))
+        # print(len(self.yLabel_list))
+        # print(index)
+        # print(self.rgb_path+self.XImg_list[index])
+        # print(self.label_path+self.yLabel_list[index])
 
-        ypath = self.label_path+self.yLabel_list[index]
-        # print(imgpath, ypath)
-        # try:
-        imgpath = str(imgpath)
-        ypath = str(ypath)
-
-        print(imgpath)
-        print(ypath)
-        # image = Image.open(open(imgpath, 'rb'))
-        print(type(imgpath))
-
-        # testpath = 'C:/Users/noahv/OneDrive/NDSU Research/test_segformer.png'
-        img = Image.open(imgpath, mode='r')
-        # image = Image.Image.load(imgpath)
-
-        # image = cv2.imread(imgpath)
-        # print(image.shape)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # image = Image.fromarray(image)
-
-        print('Image loaded')
-        # y = Image.open(open(ypath, 'rb'))
-        y = Image.open(ypath, mode='r')
-        # y = Image.Image.load(ypath)
-
-        # y = cv2.imread(ypath)
-        # y = cv2.cvtColor(y, cv2.COLOR_BGR2RGB)
-        y = Image.fromarray(y)
-        print('Mask loaded')
+        # print(self.XImg_list)
+        image = Image.open(os.path.join(self.rgb_path+self.XImg_list[index]))
+        # image = open(self.rgb_path+self.XImg_list[index])
+        # fd = image.fileno()
+        # print(fd)
+        y = Image.open(os.path.join(self.label_path+self.yLabel_list[index]))
+        # y = open(self.label_path+self.yLabel_list[index])
 
         if self.transform is not None:
-            img = self.transform(img)
+            image = self.transform(image)
             y = self.transform(y)
 
-        img = transforms.ToTensor()(img)
+        image = transforms.ToTensor()(image)
+        # y = np.array(y)
+        # y = torch.from_numpy(y)
 
         y = np.array(y)
         y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
@@ -106,10 +131,136 @@ class CityscapesDataset(Dataset):
         y = torch.from_numpy(y)
         y = y.type(torch.LongTensor)
 
+        # y = y.type(torch.LongTensor)
+        # print(self.rgb_path+self.XImg_list[index])
         if self.eval:
-            return img, y, self.XImg_list[index]
+            return image, y, self.XImg_list[index]
         else:
-            return img, y
+            return image, y
+
+# class CityscapesDataset(Dataset):
+#     def __init__(self, split, relabelled, root_dir, target_type='semantic', mode='fine', transform=None, eval=False, numClasses=1):
+#         self.transform = transform
+#         self.classes = numClasses
+#         if mode == 'fine':
+#             self.mode = 'gtFine'
+#         elif mode == 'coarse':
+#             self.mode = 'gtCoarse'
+#         self.split = split
+#         self.yLabel_list = []
+#         self.XImg_list = []
+#         self.eval = eval
+
+#         # Preparing a list of all labelTrainIds rgb and
+#         # ground truth images. Setting relabbelled=True is recommended.
+
+#         self.label_path = os.path.join(
+#             os.getcwd(), root_dir+'/'+self.mode+'/'+self.split)
+#         self.rgb_path = os.path.join(
+#             os.getcwd(), root_dir+'/leftImg8bit/'+self.split)
+#         city_list = os.listdir(self.label_path)
+#         # print('citylist', city_list)
+#         for city in city_list:
+#             temp = os.listdir(self.label_path+'/'+city)
+#             list_items = temp.copy()
+
+#             # 19-class label items being filtered
+#             for item in temp:
+#                 if not item.endswith('gtFine_color.png', 0, len(item)):
+#                     list_items.remove(item)
+
+#             # defining paths
+#             list_items = ['/'+city+'/'+path for path in list_items]
+
+#             self.yLabel_list.extend(list_items)
+#             self.XImg_list.extend(
+#                 ['/'+city+'/' +
+#                     path for path in os.listdir(self.rgb_path+'/'+city)]
+#             )
+
+#     def __len__(self):
+#         length = len(self.XImg_list)
+#         return length
+
+#     def __getitem__(self, index):
+#         image = Image.open(self.rgb_path+self.XImg_list[index])
+#         y = Image.open(self.label_path+self.yLabel_list[index])
+
+#         if self.transform is not None:
+#             image = self.transform(image)
+#             y = self.transform(y)
+
+#         image = transforms.ToTensor()(image)
+#         y = np.array(y)
+#         y = torch.from_numpy(y)
+
+#         y = y.type(torch.LongTensor)
+#         if self.eval:
+#             return image, y, self.XImg_list[index]
+#         else:
+#             return image, y
+
+    # def __getitem__(self, index):
+    #     imgpath = self.rgb_path+self.XImg_list[index]
+    #     # print(imgpath)
+    #     # print(self.yLabel_list)
+
+    #     ypath = self.label_path+self.yLabel_list[index]
+    #     # print(imgpath, ypath)
+    #     # try:
+    #     # imgpath = str(imgpath)
+    #     # ypath = str(ypath)
+
+    #     print(imgpath)
+    #     print(ypath)
+    #     # image = Image.open(open(imgpath, 'rb'))
+    #     print(type(imgpath))
+
+    #     # testpath = 'C:/Users/noahv/OneDrive/NDSU Research/test_segformer.png'
+    #     img = Image.open(self.rgb_path+self.XImg_list[index])
+    #     y = Image.open(self.label_path+self.yLabel_list[index])
+
+    #     # img4 = img
+    #     # image = Image.Image.load(imgpath)
+
+    #     # image = cv2.imread(imgpath)
+    #     # print(img4.size)
+    #     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    #     # image = Image.fromarray(image)
+
+    #     # print('Image loaded')
+    #     # img.close()
+    #     # y = Image.open(open(ypath, 'rb'))
+    #     # y = Image.open(self.label_path+self.yLabel_list[index])
+
+    #     img = np.array(img)
+    #     y = np.array(y)
+    #     # y = Image.Image.load(ypath)
+    #     print('mask loaded')
+    #     # y = cv2.imread(ypath)
+    #     # y = cv2.cvtColor(y, cv2.COLOR_BGR2RGB)
+    #     print(type(img), type(y))
+    #     img = Image.fromarray(img)
+    #     y = Image.fromarray(y)
+    #     # print('Mask loaded')
+
+    #     if self.transform is not None:
+    #         img = self.transform(img)
+    #         y = self.transform(y)
+
+    #     img = transforms.ToTensor()(img)
+
+    #     y = np.array(y)
+    #     y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
+    #     y = rgbToOnehotNew(y, color2label)
+
+    #     y = torch.from_numpy(y)
+    #     y = y.type(torch.LongTensor)
+
+    #     if self.eval:
+    #         return img, y, self.XImg_list[index]
+    #     else:
+    #         return img, y
 
         # except:
             # pass

@@ -1,5 +1,5 @@
-import torch
-# from torch.utils.data import DataLoader
+# import torch
+from torch.utils.data import DataLoader
 # from torchvision import datasets, utils, transforms
 from torchvision import transforms
 from datasets import CityscapesDataset
@@ -23,9 +23,9 @@ def get_cityscapes_data(
 
 ):
     data = CityscapesDataset(
-        mode=mode, split=split, target_type=target_type, relabelled=relabelled, transform=transforms, root_dir=root_dir, eval=eval, numClasses=numClasses)
+        mode=mode, split=split, target_type=target_type, transform=transforms, root_dir=root_dir, eval=eval, numClasses=numClasses)
 
-    data_loaded = torch.utils.data.DataLoader(
+    data_loaded = DataLoader(
         data, batch_size=batch_size, shuffle=shuffle, pin_memory=pin_memory)
 
     return data_loaded

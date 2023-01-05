@@ -5,7 +5,9 @@ import torch.nn.functional as F
 from torchvision import transforms
 from tqdm import tqdm
 from utilities import *
+from datasets import CityscapesDataset
 from model import UNET
+# import PIL
 from PIL import Image
 
 if torch.cuda.is_available():
@@ -15,9 +17,9 @@ else:
     DEVICE = "cpu"
     print('Running on the CPU')
 
-MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102.pt'
+MODEL_PATH = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102.pt'
 LOAD_MODEL = True
-ROOT_DIR = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET'
+ROOT_DIR = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET'
 IMG_HEIGHT = 110
 IMG_WIDTH = 220
 BATCH_SIZE = 16
@@ -91,6 +93,7 @@ def main():
         numClasses=19
     )
 
+    print(type(train_set))
     print('Data Loaded Successfully!')
 
     # Defining the model, optimizer and loss function
