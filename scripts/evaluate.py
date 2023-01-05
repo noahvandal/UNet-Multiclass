@@ -1,6 +1,6 @@
 import torch
 from model import UNET
-# from utilities import *
+from utilities import *
 # from utilities import save_as_images
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -18,11 +18,11 @@ else:
     device = 'cpu'
     print('Running on the CPU')
 
-ROOT_DIR_CITYSCAPES = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET'
+ROOT_DIR_CITYSCAPES = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET'
 IMAGE_HEIGHT = 300
 IMAGE_WIDTH = 600
 
-MODEL_PATH = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102.pt'
+MODEL_PATH = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102.pt'
 
 EVAL = True
 PLOT_LOSS = False
@@ -37,19 +37,27 @@ def save_predictions(data, model, globalSum):
             X, y = X.to(device), y.to(device)
             predictions = model(X)
             # print(X.shape, y.shape, predictions.shape)
+            # print(predictions)
             imgs = predictions
-            predictions = torch.nn.functional.softmax(predictions, dim=1)
-            pred_labels = torch.argmax(predictions, dim=1)
-            pred_labels = pred_labels.float()
+            # print(imgs.shape)
+            # predictions = torch.nn.functional.softmax(predictions, dim=1)
+            # print(predictions.shape)
+            # print(predictions)
+            # predictions = torch.argmax(predictions, dim=1)
+            # print(predictions.shape)
+            # print(predictions)
+            # print(predictions[0][0][0])
+            # print(imgs[0][:][0][0])
+            # pred_labels = pred_labels.float()
             # print(pred_labels.shape)
 
             # Remapping the labels
-            pred_labels = pred_labels.to('cpu')
-            pred_labels.apply_(lambda x: t2l[x].id)
-            pred_labels = pred_labels.to(device)
+            # pred_labels = pred_labels.to('cpu')
+            # pred_labels.apply_(lambda x: t2l[x].id)
+            # pred_labels = pred_labels.to(device)
 
             # Resizing predicted images too original size
-            pred_labels = transforms.Resize((1024, 2048))(pred_labels)
+            # pred_labels = transforms.Resize((1024, 2048))(pred_labels)
 
             # imgs = plt.imshow(tf.argmax(imgs[0], axis=-1))
             # print(imgs.shape)
@@ -60,10 +68,10 @@ def save_predictions(data, model, globalSum):
             s = str(s)
             pos = s.rfind('/', 0, len(s))
             name = s[pos+1:-18]
-            imgname = '/' + name + '1223rgb.png'
+            imgname = '/' + name + '0105rgb.png'
 
             global location
-            location = 'C:/Users/noahv/OneDrive/My Projects 2022 +/Ongoing/GithubPublicRepositories/Datasets/Cityscapes/CITYSCAPES_DATASET/output_0103'
+            location = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET/output_0104'
 
             # save_as_images(pred_labels, location, name)
 
@@ -77,7 +85,9 @@ def save_predictions(data, model, globalSum):
 def onehot_to_rgb(onehot, color_dict, globalSum):
     single_layer = np.argmax(onehot, axis=1)
     single_layer = single_layer[0, :, :]
-    output = np.zeros(onehot.shape[2:4]+(3,))
+    output = np.zeros(single_layer.shape[:2]+(3,))
+    print(single_layer.shape, output.shape)
+    print(len(color_dict.keys()))
     for k in color_dict.keys():
         color = color_dict[k][7]
         output[single_layer == k] = color

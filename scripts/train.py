@@ -99,7 +99,7 @@ def main():
     # Defining the model, optimizer and loss function
     unet = UNET(in_channels=3, classes=19).to(DEVICE).train()
     optimizer = optim.Adam(unet.parameters(), lr=LEARNING_RATE)
-    loss_function = nn.CrossEntropyLoss(weight=lossweights, ignore_index=255)
+    loss_function = nn.CrossEntropyLoss(weight=None, ignore_index=255)
 
     # Loading a previous stored model from MODEL_PATH variable
     if LOAD_MODEL == True:

@@ -11,8 +11,8 @@ import time
 # import cv2
 # import matplotlib
 # import matplotlib.pyplot as plt
-from evaluate import rgbToOnehotNew
-from labels import color2label
+# from evaluate import rgbToOnehotNew
+from labels import color2label, id2label
 
 
 class CityscapesDataset(Dataset):
@@ -125,8 +125,11 @@ class CityscapesDataset(Dataset):
         # y = torch.from_numpy(y)
 
         y = np.array(y)
+        # print('yshape ', y.shape)
         y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
-        y = rgbToOnehotNew(y, color2label)
+        # print('yshape', y.shape)
+        y = DatasetrgbToOnehotNew(y, color2label, id2label, self.classes)
+        # print(y)
 
         y = torch.from_numpy(y)
         y = y.type(torch.LongTensor)
@@ -138,177 +141,93 @@ class CityscapesDataset(Dataset):
         else:
             return image, y
 
-# class CityscapesDataset(Dataset):
-#     def __init__(self, split, relabelled, root_dir, target_type='semantic', mode='fine', transform=None, eval=False, numClasses=1):
-#         self.transform = transform
-#         self.classes = numClasses
-#         if mode == 'fine':
-#             self.mode = 'gtFine'
-#         elif mode == 'coarse':
-#             self.mode = 'gtCoarse'
-#         self.split = split
-#         self.yLabel_list = []
-#         self.XImg_list = []
-#         self.eval = eval
 
-#         # Preparing a list of all labelTrainIds rgb and
-#         # ground truth images. Setting relabbelled=True is recommended.
-
-#         self.label_path = os.path.join(
-#             os.getcwd(), root_dir+'/'+self.mode+'/'+self.split)
-#         self.rgb_path = os.path.join(
-#             os.getcwd(), root_dir+'/leftImg8bit/'+self.split)
-#         city_list = os.listdir(self.label_path)
-#         # print('citylist', city_list)
-#         for city in city_list:
-#             temp = os.listdir(self.label_path+'/'+city)
-#             list_items = temp.copy()
-
-#             # 19-class label items being filtered
-#             for item in temp:
-#                 if not item.endswith('gtFine_color.png', 0, len(item)):
-#                     list_items.remove(item)
-
-#             # defining paths
-#             list_items = ['/'+city+'/'+path for path in list_items]
-
-#             self.yLabel_list.extend(list_items)
-#             self.XImg_list.extend(
-#                 ['/'+city+'/' +
-#                     path for path in os.listdir(self.rgb_path+'/'+city)]
-#             )
-
-#     def __len__(self):
-#         length = len(self.XImg_list)
-#         return length
-
-#     def __getitem__(self, index):
-#         image = Image.open(self.rgb_path+self.XImg_list[index])
-#         y = Image.open(self.label_path+self.yLabel_list[index])
-
-#         if self.transform is not None:
-#             image = self.transform(image)
-#             y = self.transform(y)
-
-#         image = transforms.ToTensor()(image)
-#         y = np.array(y)
-#         y = torch.from_numpy(y)
-
-#         y = y.type(torch.LongTensor)
-#         if self.eval:
-#             return image, y, self.XImg_list[index]
-#         else:
-#             return image, y
-
-    # def __getitem__(self, index):
-    #     imgpath = self.rgb_path+self.XImg_list[index]
-    #     # print(imgpath)
-    #     # print(self.yLabel_list)
-
-    #     ypath = self.label_path+self.yLabel_list[index]
-    #     # print(imgpath, ypath)
-    #     # try:
-    #     # imgpath = str(imgpath)
-    #     # ypath = str(ypath)
-
-    #     print(imgpath)
-    #     print(ypath)
-    #     # image = Image.open(open(imgpath, 'rb'))
-    #     print(type(imgpath))
-
-    #     # testpath = 'C:/Users/noahv/OneDrive/NDSU Research/test_segformer.png'
-    #     img = Image.open(self.rgb_path+self.XImg_list[index])
-    #     y = Image.open(self.label_path+self.yLabel_list[index])
-
-    #     # img4 = img
-    #     # image = Image.Image.load(imgpath)
-
-    #     # image = cv2.imread(imgpath)
-    #     # print(img4.size)
-    #     # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    #     # image = Image.fromarray(image)
-
-    #     # print('Image loaded')
-    #     # img.close()
-    #     # y = Image.open(open(ypath, 'rb'))
-    #     # y = Image.open(self.label_path+self.yLabel_list[index])
-
-    #     img = np.array(img)
-    #     y = np.array(y)
-    #     # y = Image.Image.load(ypath)
-    #     print('mask loaded')
-    #     # y = cv2.imread(ypath)
-    #     # y = cv2.cvtColor(y, cv2.COLOR_BGR2RGB)
-    #     print(type(img), type(y))
-    #     img = Image.fromarray(img)
-    #     y = Image.fromarray(y)
-    #     # print('Mask loaded')
-
-    #     if self.transform is not None:
-    #         img = self.transform(img)
-    #         y = self.transform(y)
-
-    #     img = transforms.ToTensor()(img)
-
-    #     y = np.array(y)
-    #     y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
-    #     y = rgbToOnehotNew(y, color2label)
-
-    #     y = torch.from_numpy(y)
-    #     y = y.type(torch.LongTensor)
-
-    #     if self.eval:
-    #         return img, y, self.XImg_list[index]
-    #     else:
-    #         return img, y
-
-        # except:
-            # pass
-        # print(imgpath)
-        # print(ypath)
-        # print(image.size)
-        # # print(y.size)
-
-        # if self.transform is not None:
-        #     image = self.transform(image)
-        #     y = self.transform(y)
-
-        # image = transforms.ToTensor()(image)
-        # y = np.array(y)
-        # # print('orig y shape', y.shape)
-
-        # y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
-        # # y = torch.from_numpy(y)
-        # # print('yshape before', y.shape)
-        # # y = y.type(torch.LongTensor)
-        # # print("yshape", y.shape)
-
-        # # y = rgbToOnehot(y, color2label, id2label, self.classes)
-        # y = rgbToOnehotNew(y, color2label)
-        # # print(y.shape)
-
-        # y = torch.from_numpy(y)
-        # y = y.type(torch.LongTensor)
-
-        # if self.eval:
-        #     return image, y, self.XImg_list[index]
-        # else:
-        #     return image, y
+def DatasetrgbToOnehotNew2(rgb_arr, color_dict, iddict, numclasses):
+    num_classes = len(color_dict)
+    shape = rgb_arr.shape[:2]+(num_classes,)
+    arr = np.zeros(shape, dtype=np.int8)
+    for i, cls in enumerate(color_dict):
+        arr[:, :, i] = np.all(rgb_arr.reshape((-1, 3)) ==
+                              color_dict[i], axis=1).reshape(shape[:2])
+    return arr
 
 
-def rgbToOnehotNew(rgb, colorDict):
-    shape = rgb.shape[:2]
-    arr = np.zeros(shape, dtype=np.int16)
+def DatasetrgbToOnehotNew(rgb, colorDict, iddict, numclass):
+    # arr = np.zeros(rgb.shape[:2])
 
-    W = np.power(256, [[0], [1], [2]])
-    img_id = rgb.dot(W).squeeze(-1)
-    values = np.unique(img_id)
+    # for i, clr in enumerate(colorDict.keys()):
+    #     for _x, x in enumerate(rgb):
+    #         for _y, y in enumerate(x):
+    #             pixel = np.array(rgb[_x][_y])
+    #             if np.all(pixel == clr):
+    #                 arr[_x][_y] = i
+    dense = np.zeros(rgb.shape[:2])
+    for label, color in enumerate(colorDict.keys()):
+        if label < 19:
+            dense[np.all(rgb == color, axis=-1)] = label
 
-    for i, c in enumerate(values):
-        try:
-            arr[img_id == c] = colorDict[i][7]
-        except:
-            pass
+    # print(dense)
+    return dense
+
+
+def DatasetrgbToOnehotNewTest(rgb, colorDict, idDict, numClasses):
+    print(rgb.shape)
+
+    # shape = rgb[]
+    # shape = np.array(rgb[:2])
+    # print('shape of shape', shape.shape)
+    # arr = np.zeros(shape, dtype=np.int16)
+    arr = np.zeros(rgb.shape[:2])
+    # W = np.power(256, [[0], [1], [2]])
+    # img_id = rgb.dot(W).squeeze(-1)
+    # values = np.unique(img_id)
+    # print(len(values))
+
+    # print(len(colorDict.keys()))
+
+    # for i, c in enumerate(colorDict.keys()):
+    #     print(c)
+    #     print(img_id)
+    #     try:
+    #         arr[img_id == c] = colorDict[i][7]
+    #     except:
+    #         pass
+    globalSum = []
+    # for k, j in zip(colorDict.keys(), idDict.keys()):
+    #     if j <= (numClasses - 1):
+    #         color = np.array(colorDict[k][7])
+    #         for _x, x in enumerate(rgb):
+    #             for _y, y in enumerate(x):
+    #                 # print(color, rgb[_x][_y])
+    #                 pixel = np.array(rgb[_x][_y])
+    #                 if np.all(pixel == color):
+    #                     arr[_x][_y] = j  # assigning pixel to ID value
+    #     pixelSum = np.sum(np.array(single_layer) == k)
+    #     globalSum[k] += pixelSum
+    # return arr
+    k = 0
+    # for inst in colorDict:
+    # print(inst)
+    # for inst in idDict:
+    # print(inst)
+    # print(idDict)
+    for i, k in enumerate(colorDict.keys()):
+        print('k', k)
+        # color = colorDict[k][7]
+        color = k
+        ID = idDict[i][1]
+        print('id', ID)
+        print('arr shpae', arr.shape)
+        arr[rgb == color] = ID
+        pixelSum = np.sum(np.array(rgb) == color)
+        globalSum.append(pixelSum)
+    print(globalSum)
+    arr = arr[1]
+    print(arr.shape)
+    # print(arr.shape)
+    # print(arr[0])
+    # print(arr[1])
+    # print(arr[2])
 
     return arr
 
