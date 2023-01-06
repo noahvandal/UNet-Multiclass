@@ -7,8 +7,10 @@ from tqdm import tqdm
 from utilities import *
 from datasets import CityscapesDataset
 from model import UNET
+import numpy as np
 # import PIL
 from PIL import Image
+import csv
 
 if torch.cuda.is_available():
     DEVICE = 'cuda:0'
@@ -18,13 +20,14 @@ else:
     print('Running on the CPU')
 
 MODEL_PATH = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102.pt'
+CSV_LOG_PATH = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/Ongoing/GithubPublicRepositories/UNet-Multiclass/model_full_0102_csvLogs.csv'
 LOAD_MODEL = True
 ROOT_DIR = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET'
 IMG_HEIGHT = 110
 IMG_WIDTH = 220
 BATCH_SIZE = 16
 LEARNING_RATE = 0.005
-EPOCHS = 15
+EPOCHS = 30
 
 
 oldlossweights = [1, 50, 0.1, 0.01, 50,  # weights for lightly used training labels;  inference image and count pixels; give weights on following {px count, weight}
@@ -44,6 +47,7 @@ newlossweights = torch.tensor(newlossweights)
 newlossweights = 1/newlossweights
 
 lossweights = torch.tensor(newlossweights)
+oldlossweights = torch.tensor(oldlossweights)
 
 
 def train_function(data, model, optimizer, loss_fn, device):
@@ -51,7 +55,7 @@ def train_function(data, model, optimizer, loss_fn, device):
     loss_values = []
     data = tqdm(data)
     for index, batch in enumerate(data):
-        X, y = batch
+        X, y, weights = batch
         X, y = X.to(device), y.to(device)
         preds = model(X)
         # y = torch.movedim(y, 3, 1)
@@ -64,6 +68,18 @@ def train_function(data, model, optimizer, loss_fn, device):
         # print(preds.dtype, y.dtype)
         # y = y.to(torch.float32)
         # print(preds.dtype, y.dtype)
+        # print(weights)
+        # print(type(weights))
+        newweight = []
+        newweight = [torch.sum(tensor) for tensor in weights]
+        newweight = torch.tensor(newweight)
+        # print('newweight!', newweight)
+        # weights = torch.stack(weights).sum(dim=0)
+        # print(weights)
+        # print(type(weights))
+        updateWeight = torch.tensor(1/newweight)
+        loss_fn = nn.CrossEntropyLoss(
+            weight=updateWeight, ignore_index=255)
         loss = loss_fn(preds, y)
         optimizer.zero_grad()
         loss.backward()
@@ -90,7 +106,7 @@ def main():
         root_dir=ROOT_DIR,
         transforms=transform,
         batch_size=BATCH_SIZE,
-        numClasses=19
+        numClasses=19,
     )
 
     print(type(train_set))
@@ -99,7 +115,8 @@ def main():
     # Defining the model, optimizer and loss function
     unet = UNET(in_channels=3, classes=19).to(DEVICE).train()
     optimizer = optim.Adam(unet.parameters(), lr=LEARNING_RATE)
-    loss_function = nn.CrossEntropyLoss(weight=None, ignore_index=255)
+    loss_function = nn.CrossEntropyLoss(
+        weight=oldlossweights, ignore_index=255)
 
     # Loading a previous stored model from MODEL_PATH variable
     if LOAD_MODEL == True:
@@ -123,6 +140,8 @@ def main():
             'epoch': e,
             'loss_values': LOSS_VALS
         }, MODEL_PATH)
+        logs = np.array(LOSS_VALS)
+        np.savetxt(CSV_LOG_PATH, logs)
         print("Epoch completed and model successfully saved!")
 
 

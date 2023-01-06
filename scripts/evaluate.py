@@ -8,7 +8,7 @@ from PIL import Image
 from torchvision import transforms
 import tensorflow as tf
 from cityscapesscripts.helpers.labels import trainId2label as t2l
-from labels import name2label, id2label
+from labels import name2label, id2label, color2label
 import numpy as np
 
 if torch.cuda.is_available():
@@ -31,9 +31,11 @@ PLOT_LOSS = False
 def save_predictions(data, model, globalSum):
     model.eval()
     with torch.no_grad():
+        globalSum = np.zeros([19])
         for idx, batch in enumerate(tqdm(data)):
 
-            X, y, s = batch  # here 's' is the name of the file stored in the root directory
+            # here 's' is the name of the file stored in the root directory
+            X, y, s, weights = batch
             X, y = X.to(device), y.to(device)
             predictions = model(X)
             # print(X.shape, y.shape, predictions.shape)
@@ -61,9 +63,11 @@ def save_predictions(data, model, globalSum):
 
             # imgs = plt.imshow(tf.argmax(imgs[0], axis=-1))
             # print(imgs.shape)
-            imgs, globalSum = onehot_to_rgb(imgs, id2label, globalSum)
-            print('image shape', imgs.shape)
-            print(type(imgs))
+            # imgs, globalSum = onehot_to_rgb(imgs, id2label, globalSum)
+            imgs, globalSum = onehot_to_rgb(imgs, color2label, globalSum)
+
+            # print('image shape', imgs.shape)
+            # print(type(imgs))
             # Configure f  ilename & location to save predictions as images
             s = str(s)
             pos = s.rfind('/', 0, len(s))
@@ -82,18 +86,63 @@ def save_predictions(data, model, globalSum):
             print(globalSum)
 
 
-def onehot_to_rgb(onehot, color_dict, globalSum):
-    single_layer = np.argmax(onehot, axis=1)
-    single_layer = single_layer[0, :, :]
-    output = np.zeros(single_layer.shape[:2]+(3,))
-    print(single_layer.shape, output.shape)
-    print(len(color_dict.keys()))
-    for k in color_dict.keys():
-        color = color_dict[k][7]
-        output[single_layer == k] = color
-        pixelSum = np.sum(np.array(single_layer) == k)
-        globalSum[k] += pixelSum
+# def onehot_to_rgb(onehot, color_dict, globalSum):
+#     print(onehot.shape)
+#     single_layer = np.argmax(onehot, axis=1)
+#     single_layer = single_layer[0, :, :]
+#     output = np.zeros(single_layer.shape[:2]+(3,))
+#     print(single_layer.shape, output.shape)
+#     print(len(color_dict.keys()))
+#     for k in color_dict.keys():
+#         color = color_dict[k][7]
+#         output[single_layer == k] = color
+#         pixelSum = np.sum(np.array(single_layer) == k)
+#         globalSum[k] += pixelSum
 
+#     return np.uint8(output), globalSum
+
+# def onehot_to_rgb(onehot, colorDict):
+#     # print(onehot.shape)
+#     # single_layer = np.argmax(onehot, axis=1)
+#     # single_layer = single_layer[0, :, :]
+#     # output = np.zeros(single_layer.shape[:2]+(3,))
+#     # print(single_layer.shape, output.shape)
+#     # print(len(color_dict.keys()))
+#     # for i, k in enumerate(color_dict.keys()):
+#     #     color = k
+#     #     output[single_layer == i] = color
+#     #     pixelSum = np.sum(np.array(single_layer) == k)
+#     #     globalSum[k] += pixelSum
+#     print(type(onehot))
+#     print(onehot.shape)
+#     singleLayer = np.argmax(onehot, axis=1)
+#     singleLayer = np.transpose(singleLayer, [2, 1, 0])
+#     print(singleLayer)
+
+#     dense = np.zeros(singleLayer.shape[0:2]+(3,))
+#     print(singleLayer.shape, dense.shape)
+#     for label, color in enumerate(colorDict.keys()):
+#         if label < 19:
+#             print(label, color)
+#             print(singleLayer.shape, dense.shape)
+#             dense[np.all(singleLayer == label, axis=-1)] = color
+
+#     return np.uint8(dense)
+
+def onehot_to_rgb(onehot, color_dict, globalSum):
+    onehot = np.array(onehot)
+    single_layer = np.argmax(onehot, axis=1)
+    output = np.zeros(onehot.shape[2:4]+(3,))
+    single_layer = np.transpose(single_layer, [1, 2, 0])
+    # single_layer = np.concatenate(
+    # (single_layer, single_layer, single_layer), axis=2)
+    for i, k in enumerate(color_dict.keys()):
+        # print(single_layer.shape, output.shape, i, k)
+        # output[single_layer == i] = k
+        if i < 19:
+            output[np.all(single_layer == i, axis=-1)] = k
+            pixelSum = np.sum(np.array(single_layer) == k)
+            globalSum[i] += pixelSum
     return np.uint8(output), globalSum
 
 

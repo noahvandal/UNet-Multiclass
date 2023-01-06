@@ -97,6 +97,7 @@ class CityscapesDataset(Dataset):
         return length
 
     def __getitem__(self, index):
+        # globalSum = []
         # print(len(self.XImg_list))
         # print(len(self.yLabel_list))
         # print(index)
@@ -128,7 +129,8 @@ class CityscapesDataset(Dataset):
         # print('yshape ', y.shape)
         y = y[:, :, 0:3]  # removing the alpha channel (not really needed)
         # print('yshape', y.shape)
-        y = DatasetrgbToOnehotNew(y, color2label, id2label, self.classes)
+        y, sum = DatasetrgbToOnehotNew(
+            y, color2label, id2label, self.classes)
         # print(y)
 
         y = torch.from_numpy(y)
@@ -137,9 +139,9 @@ class CityscapesDataset(Dataset):
         # y = y.type(torch.LongTensor)
         # print(self.rgb_path+self.XImg_list[index])
         if self.eval:
-            return image, y, self.XImg_list[index]
+            return image, y, self.XImg_list[index], sum
         else:
-            return image, y
+            return image, y, sum
 
 
 def DatasetrgbToOnehotNew2(rgb_arr, color_dict, iddict, numclasses):
@@ -161,13 +163,19 @@ def DatasetrgbToOnehotNew(rgb, colorDict, iddict, numclass):
     #             pixel = np.array(rgb[_x][_y])
     #             if np.all(pixel == clr):
     #                 arr[_x][_y] = i
+    # globalSum = []
+    sum = []
     dense = np.zeros(rgb.shape[:2])
     for label, color in enumerate(colorDict.keys()):
         if label < 19:
             dense[np.all(rgb == color, axis=-1)] = label
+            pixelSum = np.sum(np.array(rgb) == color)
+            if pixelSum == 0:
+                pixelSum = 1
+            sum.append(pixelSum)
 
     # print(dense)
-    return dense
+    return dense, sum
 
 
 def DatasetrgbToOnehotNewTest(rgb, colorDict, idDict, numClasses):
