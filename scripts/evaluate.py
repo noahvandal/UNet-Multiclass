@@ -75,7 +75,7 @@ def save_predictions(data, model, globalSum):
             imgname = '/' + name + '0105rgb.png'
 
             global location
-            location = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET/output_0104'
+            location = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET/output_0109'
 
             # save_as_images(pred_labels, location, name)
 
@@ -141,7 +141,7 @@ def onehot_to_rgb(onehot, color_dict, globalSum):
         # output[single_layer == i] = k
         if i < 19:
             output[np.all(single_layer == i, axis=-1)] = k
-            pixelSum = np.sum(np.array(single_layer) == k)
+            pixelSum = np.sum(np.array(single_layer) == i)
             globalSum[i] += pixelSum
     return np.uint8(output), globalSum
 

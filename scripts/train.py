@@ -10,7 +10,6 @@ from model import UNET
 import numpy as np
 # import PIL
 from PIL import Image
-import csv
 
 if torch.cuda.is_available():
     DEVICE = 'cuda:0'
@@ -26,8 +25,9 @@ ROOT_DIR = 'C:/Users/noahv/OneDrive/MyProjects2022Onward/CITYSCAPES_DATASET'
 IMG_HEIGHT = 110
 IMG_WIDTH = 220
 BATCH_SIZE = 16
-LEARNING_RATE = 0.005
-EPOCHS = 30
+LEARNING_RATE = 0.0000001
+decayRate = 0.95
+EPOCHS = 70
 
 
 oldlossweights = [1, 50, 0.1, 0.01, 50,  # weights for lightly used training labels;  inference image and count pixels; give weights on following {px count, weight}
@@ -115,6 +115,8 @@ def main():
     # Defining the model, optimizer and loss function
     unet = UNET(in_channels=3, classes=19).to(DEVICE).train()
     optimizer = optim.Adam(unet.parameters(), lr=LEARNING_RATE)
+    lrSchedule = optim.lr_scheduler.ExponentialLR(
+        optimizer=optimizer, gamma=decayRate)
     loss_function = nn.CrossEntropyLoss(
         weight=oldlossweights, ignore_index=255)
 
@@ -140,6 +142,7 @@ def main():
             'epoch': e,
             'loss_values': LOSS_VALS
         }, MODEL_PATH)
+        lrSchedule.step()
         logs = np.array(LOSS_VALS)
         np.savetxt(CSV_LOG_PATH, logs)
         print("Epoch completed and model successfully saved!")
