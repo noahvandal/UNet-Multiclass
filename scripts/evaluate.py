@@ -132,7 +132,7 @@ def save_predictions(data, model, globalSum):
 def onehot_to_rgb(onehot, color_dict, globalSum):
     onehot = np.array(onehot)
     single_layer = np.argmax(onehot, axis=1)
-    output = np.zeros(onehot.shape[2:4]+(3,))
+    output = np.zeros(onehot.shape[2:4]+(3,))   
     single_layer = np.transpose(single_layer, [1, 2, 0])
     # single_layer = np.concatenate(
     # (single_layer, single_layer, single_layer), axis=2)
